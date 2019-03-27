@@ -23,6 +23,7 @@ for(int i=0;i<sizerow;i++){
 
 	char test[40]={';'};
 	fscanf(myfile, "%s", test);
+	printf("%s",test)
 
 	for(int j=0;j<sizecol;j++){
 		pole[ j+sizerow*i ]=test[ j ];		
