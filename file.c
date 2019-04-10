@@ -49,8 +49,8 @@ int findmychar(int row, int col, char (*field)[maxsize],int *coordch,
 																																coordch[0]=i;
 																																coordch[1]=j;
 																								} else if (field[i][j]=='b') {
-																																box[*boxcount][0]=i;
-																																box[*boxcount][1]=j;
+																																/*		box[*boxcount][0]=i;
+																																   box[*boxcount][1]=j; */
 																																(*boxcount)++;
 
 																								} else if (field[i][j]=='x') {
@@ -67,7 +67,7 @@ int findmychar(int row, int col, char (*field)[maxsize],int *coordch,
 								return 0;
 }
 void goingthings(int row,int col,char (*field)[maxsize],int *ch,
-																	int (*xbox)[2],int boxcount)
+																	int (*xbox)[2],int boxcount) /* int (*box)[2] */
 {
 								switch (field[ch[0]+row][ch[1]+col]) {
 								case 'w':
@@ -80,12 +80,12 @@ void goingthings(int row,int col,char (*field)[maxsize],int *ch,
 																field[ch[0]+row*2][ch[1]+col*2]='b';
 																field[ch[0]+row][ch[1]+col]='c';
 																field[ch[0]][ch[1]]='-';
-																for (int i=0; i<boxcount; i++)
-																								if (xbox[i][0] == ch[0]+row && xbox[i][1] == ch[1]+col) {
-																																xbox[i][0]+=row;
-																																xbox[i][1]+=col;
-																																break;
-																								}
+																/*	for (int i=0; i<boxcount; i++)
+																         if (box[i][0] == ch[0]+row && box[i][1] == ch[1]+col) {
+																                 box[i][0]+=row;
+																                 box[i][1]+=col;
+																                 break;
+																         } */
 																ch[0]+=row;
 																ch[1]+=col;
 																break;
@@ -97,28 +97,72 @@ void goingthings(int row,int col,char (*field)[maxsize],int *ch,
 																break;
 								case '-':
 																field[ch[0]+row][ch[1]+col]='c';
-																bool writex=false;
-																for (int i=0; i<boxcount; i++)
-																								if (xbox[i][0] == ch[0] && xbox[i][1] == ch[1])
-																																writex=true;
-
-																if (writex) field[ch[0]][ch[1]]='x';
-																else field[ch[0]][ch[1]]='-';
+																field[ch[0]][ch[1]]='-';
 																ch[0]+=row;
 																ch[1]+=col;
 																break;
 								}
 								for (int i=0; i<boxcount; i++)
 																if (field[ xbox[i][0] ][ xbox[i][1] ] == '-') {
-																	field[ xbox[i][0] ][ xbox[i][1] ]='x';
+																								field[ xbox[i][0] ][ xbox[i][1] ]='x';
 																}
 }
+bool gameovertest(int drow,int dcol,char field[maxsize][maxsize],int xbox[][2],int boxcount)
+{
+								int doneboxes=0;
+								for (int i = 0; i < boxcount; i++) {
+																if (field[xbox[i][0]][xbox[i][1]]=='b') doneboxes++;
+								}
+								if (doneboxes== boxcount) {
+																printw("Map passed. Press F to pay respect.\n");
+																refresh();
+																char f;
+																do {
+																								scanf("%c",&f);
+																} while(f!='F');
+																return true;
+								}
+								/* for (int i=0; i<drow; i++) {
+																for (int j=0; j<dcol; j++) {
+																								int u=0,d=0,l=0,r=0;
+																								if (field[i][j]=='b') {
+																																if (field[i-1][j]=='w') u=1;
+																																if (field[i+1][j]=='w') d=1;
+																																if (field[i][j-1]=='w') l=1;
+																																if (field[i][j+1]=='w') r=1;
+																																switch (u+d+l+r) {
+																																case 1:
+																																								break;
+																																default: ;
+																																								bool tester=true;
+																																								for (int k=0; i<boxcount; i++)
+																																																if (i == xbox[k][0] && j== xbox[k][1])
+																																																								tester=false;
+																																								if (tester) {
+																																																printw("You lose. Press F to pay respect\n");
+																																																refresh();
+																																																char f;
+																																																do {
+																																																								scanf("%c",&f);
+																																																} while(f!='F');
+																																																return true;
+																																								}
+																																								break;
+																																}
+																								}
+																}
+								} */
+
+								return false;
+}
 int main ()
+
 {
 								initscr();
 								int error;
 								int sizerow=0,sizecol=0;
-								char field[maxsize][maxsize]={{'>'}}; /* unused char to check rewrite */
+								char field[maxsize][maxsize]={{'>'}};
+								/* unused char to check rewrite */
 								int coordch[2];
 								int box[maxsize][2]={{-1}}, boxcount=0;
 								int xbox[maxsize][2]={{-1}};
@@ -132,6 +176,7 @@ int main ()
 								if (error) return 0;
 
 								int drow=-1,dcol=0;
+								bool result;
 
 								while (true)
 								{
@@ -154,13 +199,14 @@ int main ()
 																								dcol=1;
 																								break;
 																}
-																goingthings(drow,dcol,field,coordch,xbox,boxcount);
+																goingthings(drow,dcol,field,coordch,xbox,boxcount); /* box */
 
 																clear();
 
-																/* gameovertest(boxcount,box,field); */
-
+																result=gameovertest(drow,dcol,field,xbox,boxcount);
+																if (result) break;
 																myscreen(sizerow,sizecol,field);
 								}
+								endwin();
 								return 0;
 }
