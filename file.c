@@ -5,17 +5,43 @@
 								equal to the number of goals, the game is impossible.
 enum {maxsize=100,testsize=10};
 enum {W_key=119,A_key=97,S_key=115,D_key=100};
-void getmysize (int* row,int* col,char *field)
+char* getmysize (int* row,int* col)
 {
 								FILE *myfile=fopen("./map.txt", "r");
-								for (int i = 0; fscanf(myfile, "%s", &field[i*maxsize])!=EOF; i++) {
-																(*row)++;
-								}
-								for (int i = 0; field[i]!='\0'; i++)
+								char a;
+								char* field=(char*)malloc(1);
+								int i=0;
+								(*row)=1;
+								do {
+
 																(*col)++;
+																a=fgetc(myfile);
+																field=(char*)realloc(field,*col);
+																field[i]=a;
+																i++;
+								} while(a!='\n');
+								i--;
+								(*col)--;
+								field=(char*)realloc(field,*col);
+								int nexts=(*col)*2;
+								while(a!=EOF) {
+																field=(char*)realloc(field,nexts);
+																for (int j=0; j<*col && a!=EOF; j++) {
+																								a=fgetc(myfile);
+																								field[i]=a;
+																								i++;
+																}
+																(*row)++;
+																a=fgetc(myfile);
+																nexts+=*col;
+								}
+								(*row)--;
+								nexts-=*col+*col;
+								field=(char*)realloc(field,nexts);
 								fclose(myfile);
+								return field;
 }
-void myscreen(int row, int col, char (*field)[maxsize])
+void myscreen(int row, int col, char (*field)[col])
 {
 								for (int i=0; i<row; i++) {
 																for (int j=0; j<col; j++)
@@ -39,8 +65,8 @@ void myscreen(int row, int col, char (*field)[maxsize])
 																printw("\n");
 								}
 }
-int findmychar(int row, int col, char (*field)[maxsize],int *coordch,
-															int (*box)[2],int *boxcount,int (*xbox)[2])
+int findmychar(int row, int col, char (*field)[col],int *coordch,
+															int *boxcount,int (*xbox)[2]) /* int (*box)[2] */
 {
 								int test=0;
 								for (int i=0; i<row; i++)
@@ -66,7 +92,7 @@ int findmychar(int row, int col, char (*field)[maxsize],int *coordch,
 								}
 								return 0;
 }
-void goingthings(int row,int col,char (*field)[maxsize],int *ch,
+void goingthings(int cols,int row,int col,char (*field)[cols],int *ch,
 																	int (*xbox)[2],int boxcount) /* int (*box)[2] */
 {
 								switch (field[ch[0]+row][ch[1]+col]) {
@@ -107,7 +133,7 @@ void goingthings(int row,int col,char (*field)[maxsize],int *ch,
 																								field[ xbox[i][0] ][ xbox[i][1] ]='x';
 																}
 }
-bool gameovertest(int drow,int dcol,char field[maxsize][maxsize],int xbox[][2],int boxcount)
+bool gameovertest(int col,int drow,int dcol,char (*field)[col],int xbox[][2],int boxcount)
 {
 								int doneboxes=0;
 								for (int i = 0; i < boxcount; i++) {
@@ -123,35 +149,35 @@ bool gameovertest(int drow,int dcol,char field[maxsize][maxsize],int xbox[][2],i
 																return true;
 								}
 								/* for (int i=0; i<drow; i++) {
-																for (int j=0; j<dcol; j++) {
-																								int u=0,d=0,l=0,r=0;
-																								if (field[i][j]=='b') {
-																																if (field[i-1][j]=='w') u=1;
-																																if (field[i+1][j]=='w') d=1;
-																																if (field[i][j-1]=='w') l=1;
-																																if (field[i][j+1]=='w') r=1;
-																																switch (u+d+l+r) {
-																																case 1:
-																																								break;
-																																default: ;
-																																								bool tester=true;
-																																								for (int k=0; i<boxcount; i++)
-																																																if (i == xbox[k][0] && j== xbox[k][1])
-																																																								tester=false;
-																																								if (tester) {
-																																																printw("You lose. Press F to pay respect\n");
-																																																refresh();
-																																																char f;
-																																																do {
-																																																								scanf("%c",&f);
-																																																} while(f!='F');
-																																																return true;
-																																								}
-																																								break;
-																																}
-																								}
-																}
-								} */
+								        for (int j=0; j<dcol; j++) {
+								                int u=0,d=0,l=0,r=0;
+								                if (field[i][j]=='b') {
+								                        if (field[i-1][j]=='w') u=1;
+								                        if (field[i+1][j]=='w') d=1;
+								                        if (field[i][j-1]=='w') l=1;
+								                        if (field[i][j+1]=='w') r=1;
+								                        switch (u+d+l+r) {
+								                        case 1:
+								                                break;
+								                        default: ;
+								                                bool tester=true;
+								                                for (int k=0; i<boxcount; i++)
+								                                        if (i == xbox[k][0] && j== xbox[k][1])
+								                                                tester=false;
+								                                if (tester) {
+								                                        printw("You lose. Press F to pay respect\n");
+								                                        refresh();
+								                                        char f;
+								                                        do {
+								                                                scanf("%c",&f);
+								                                        } while(f!='F');
+								                                        return true;
+								                                }
+								                                break;
+								                        }
+								                }
+								        }
+								   } */
 
 								return false;
 }
@@ -161,18 +187,17 @@ int main ()
 								initscr();
 								int error;
 								int sizerow=0,sizecol=0;
-								char field[maxsize][maxsize]={{'>'}};
+								/* char field[maxsize][maxsize]={{'>'}}; */
 								/* unused char to check rewrite */
 								int coordch[2];
-								int box[maxsize][2]={{-1}}, boxcount=0;
+								/* int box[maxsize][2]={{-1}}; */
+								int boxcount=0;
 								int xbox[maxsize][2]={{-1}};
-
-								getmysize(&sizerow,&sizecol,&field[0][0]);
-
+								char (*field)[sizecol]=getmysize(&sizerow,&sizecol);
 								myscreen(sizerow,sizecol,field);
 
 								error=findmychar(sizerow,sizecol,field,coordch,
-																									box,&boxcount,xbox);
+																									&boxcount,xbox); /* box */
 								if (error) return 0;
 
 								int drow=-1,dcol=0;
@@ -199,12 +224,13 @@ int main ()
 																								dcol=1;
 																								break;
 																}
-																goingthings(drow,dcol,field,coordch,xbox,boxcount); /* box */
+																goingthings(sizecol,drow,dcol,field,coordch,xbox,boxcount); /* box */
 
 																clear();
 
-																result=gameovertest(drow,dcol,field,xbox,boxcount);
+																result=gameovertest(sizecol,drow,dcol,field,xbox,boxcount);
 																if (result) break;
+
 																myscreen(sizerow,sizecol,field);
 								}
 								endwin();
