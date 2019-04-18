@@ -233,6 +233,7 @@ int main ()
 
 																myscreen(sizerow,sizecol,field);
 								}
+								free(field);
 								endwin();
 								return 0;
 }
