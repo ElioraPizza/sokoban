@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #define error_mes The number of boxes is not \
 								equal to the number of goals, the game is impossible.
+
 enum {maxsize=100,testsize=10};
-enum {W_key=119,A_key=97,S_key=115,D_key=100};
+enum {W_key=119,A_key=97,S_key=115,D_key=100,R_key=114,ESC_key=27};
 char* getmysize (int* row,int* col)
 {
 								FILE *myfile=fopen("./map.txt", "r");
@@ -65,8 +66,8 @@ void myscreen(int row, int col, char (*field)[col])
 																printw("\n");
 								}
 }
-int findmychar(int row, int col, char (*field)[col],int *coordch,
-															int *boxcount,int (*xbox)[2]) /* int (*box)[2] */
+bool findmychar(int row, int col, char (*field)[col],int *coordch,
+																int *boxcount,int (*xbox)[2]) /* int (*box)[2] */
 {
 								int test=0;
 								for (int i=0; i<row; i++)
@@ -86,11 +87,15 @@ int findmychar(int row, int col, char (*field)[col],int *coordch,
 																								}
 
 								if (test!=*boxcount) {
-																printw("error_mes");
-																/* need usleep or something here */
-																return 1;
+																printw("error_mes \n Press F.");
+																refresh();
+																char f;
+																do {
+																								scanf("%c",&f);
+																} while(f!='F');
+																return true;
 								}
-								return 0;
+								return false;
 }
 void goingthings(int cols,int row,int col,char (*field)[cols],int *ch,
 																	int (*xbox)[2],int boxcount) /* int (*box)[2] */
@@ -160,7 +165,9 @@ bool gameovertest(int col,int drow,int dcol,char (*field)[col],int xbox[][2],int
 								                        case 1:
 								                                break;
 								                        default: ;
-								                                bool tester=true;
+								       free(field);
+								   endwin();
+								   return 0;                         bool tester=true;
 								                                for (int k=0; i<boxcount; i++)
 								                                        if (i == xbox[k][0] && j== xbox[k][1])
 								                                                tester=false;
@@ -185,7 +192,7 @@ int main ()
 
 {
 								initscr();
-								int error;
+								bool error;
 								int sizerow=0,sizecol=0;
 								/* char field[maxsize][maxsize]={{'>'}}; */
 								/* unused char to check rewrite */
@@ -195,12 +202,17 @@ int main ()
 								int xbox[maxsize][2]={{-1}};
 								char (*field)[sizecol]=getmysize(&sizerow,&sizecol);
 								myscreen(sizerow,sizecol,field);
-
+								char (*safefield)[sizecol]=(char*)malloc(sizecol*sizerow);
+								memcpy(safefield,field,sizecol*sizerow);
 								error=findmychar(sizerow,sizecol,field,coordch,
 																									&boxcount,xbox); /* box */
-								if (error) return 0;
+								if (error) {
+																free(field);
+																endwin();
+																return 0;
+								}
 
-								int drow=-1,dcol=0;
+								int drow=0,dcol=0;
 								bool result;
 
 								while (true)
@@ -222,6 +234,21 @@ int main ()
 																case D_key:
 																								drow=0;
 																								dcol=1;
+																								break;
+																case R_key:
+																								drow=0;
+																								dcol=0;
+																								boxcount=0;
+																								memcpy(field,safefield,sizecol*sizerow);
+																								clear();
+																								myscreen(sizerow,sizecol,field);
+																								findmychar(sizerow,sizecol,field,coordch,
+																																			&boxcount,xbox);
+																								break;
+																case ESC_key:
+																								free(field);
+																								endwin();
+																								return 0;
 																								break;
 																}
 																goingthings(sizecol,drow,dcol,field,coordch,xbox,boxcount); /* box */
