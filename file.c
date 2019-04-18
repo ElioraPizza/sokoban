@@ -208,6 +208,7 @@ int main ()
 																									&boxcount,xbox); /* box */
 								if (error) {
 																free(field);
+																free(safefield);
 																endwin();
 																return 0;
 								}
@@ -247,6 +248,7 @@ int main ()
 																								break;
 																case ESC_key:
 																								free(field);
+																								free(safefield);
 																								endwin();
 																								return 0;
 																								break;
@@ -260,6 +262,7 @@ int main ()
 
 																myscreen(sizerow,sizecol,field);
 								}
+								free(safefield);
 								free(field);
 								endwin();
 								return 0;
